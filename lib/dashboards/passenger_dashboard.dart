@@ -13,10 +13,19 @@ class PassengerDashboard extends StatefulWidget {
   State<PassengerDashboard> createState() => _PassengerDashboardState();
 }
 
-class _PassengerDashboardState extends State<PassengerDashboard> {
+class _PassengerDashboardState extends State<PassengerDashboard>
+    with TickerProviderStateMixin {
   int _selectedIndex = 0;
   int _selectedTab = 0;
   final Random _random = Random();
+  
+  // Animation controllers
+  late AnimationController _fadeController;
+  late AnimationController _slideController;
+  late AnimationController _scaleController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _scaleAnimation;
 
   // Real-time data
   double _driverAlertness = 82.9;
@@ -30,6 +39,33 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
   @override
   void initState() {
     super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    );
+    
+    _fadeController.forward();
+    _slideController.forward();
+    _scaleController.forward();
     _startDataUpdate();
   }
 
@@ -46,6 +82,9 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
 
   @override
   void dispose() {
+    _fadeController.dispose();
+    _slideController.dispose();
+    _scaleController.dispose();
     _updateTimer?.cancel();
     super.dispose();
   }
@@ -54,13 +93,22 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      body: Row(
-        children: [
-          _buildSidebar(),
-          Expanded(
-            child: _selectedIndex == 0 ? _buildDashboard() : _buildEmergency(),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Row(
+              children: [
+                _buildSidebar(),
+                Expanded(
+                  child: _selectedIndex == 0 ? _buildDashboard() : _buildEmergency(),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
