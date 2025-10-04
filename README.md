@@ -1,6 +1,6 @@
 # alert_mate
 
-A new Flutter project.
+My final year project with Muhammad Wahb.
 
 ## Getting Started
 
